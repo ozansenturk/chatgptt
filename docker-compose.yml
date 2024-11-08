@@ -7,16 +7,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file:
-      - ./backend/.env
     ports:
       - "8000:8000"
     networks:
       - app-network
+    env_file:
+      - ./backend/.env 
 
   frontend:
     build:
-      context: ./chatgpt-client
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:80"  # Map React app to localhost:3000

@@ -5,14 +5,9 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const ws = useRef(null);
-    
+
     useEffect(() => {
-        ws.current = new WebSocket(
-            process.env.NODE_ENV === 'development'
-              ? 'ws://localhost:8000/ws/chat'    // Local development
-              : 'ws://localhost:8000/ws/chat'      // Docker
-          );
-        // ws.current = new WebSocket('ws://backend:8000/ws/chat');
+        ws.current = new WebSocket('ws://localhost:8000/ws/chat');
         
         ws.current.onmessage = (event) => {
             setMessages((prev) => [...prev, event.data]);
