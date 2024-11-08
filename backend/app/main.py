@@ -1,15 +1,17 @@
 import os
+import logging
+from openai import RateLimitError
 from openai import AsyncOpenAI
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = logging.getLogger()
 
 # Load OpenAI API key from environment
 load_dotenv()
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-
-#pip install openai fastapi uvicorn python-dotenv
 
 app = FastAPI()
 
@@ -41,6 +43,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 # ChatGPT interaction function
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
 async def get_chatgpt_response(user_message: str) -> str:
     try:
         client = AsyncOpenAI()
@@ -52,8 +55,14 @@ async def get_chatgpt_response(user_message: str) -> str:
         # )
         chatgpt_reply = completion.choices[0].message['content'].strip()
         return chatgpt_reply
+    except RateLimitError:
+        # Raising error to trigger retry
+        logger.error("retrying...")
+        raise
     except Exception as e:
-        return f"Error: {str(e)}"
+        # Raise other errors to handle them in the route function
+        logger.critical("another exception")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint for chat communication
 @app.websocket("/ws/chat")
