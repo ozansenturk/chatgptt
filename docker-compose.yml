@@ -1,0 +1,28 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./chatgpt-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"  # Map React app to localhost:3000
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
